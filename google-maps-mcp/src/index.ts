@@ -1,6 +1,14 @@
 #!/usr/bin/env node
 import dotenv from 'dotenv';
-dotenv.config(); // Load environment variables from .env file
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Determine the directory of the current module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env file from the project root (one level up from src/ or build/)
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
