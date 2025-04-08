@@ -1,70 +1,77 @@
-# google-maps-server MCP Server
+# Google Maps MCP Server
 
-A Model Context Protocol server
+A Model Context Protocol (MCP) server providing tools to interact with various Google Maps APIs.
 
-This is a TypeScript-based MCP server that implements a simple notes system. It demonstrates core MCP concepts by providing:
-
-- Resources representing text notes with URIs and metadata
-- Tools for creating new notes
-- Prompts for generating summaries of notes
+This server allows clients (like AI assistants) to perform actions such as geocoding, reverse geocoding, getting directions, and calculating distance matrices using the Google Maps Platform.
 
 ## Features
 
-### Resources
-- List and access notes via `note://` URIs
-- Each note has a title, content and metadata
-- Plain text mime type for simple content access
-
 ### Tools
-- `create_note` - Create new text notes
-  - Takes title and content as required parameters
-  - Stores note in server state
 
-### Prompts
-- `summarize_notes` - Generate a summary of all stored notes
-  - Includes all note contents as embedded resources
-  - Returns structured prompt for LLM summarization
+This server exposes the following tools:
 
-## Development
+-   **`geocode`**: Converts a street address into geographic coordinates (latitude/longitude).
+    -   Input: `{ "address": "string" }`
+    -   Example: Geocode "1600 Amphitheatre Parkway, Mountain View, CA"
+-   **`reverse_geocode`**: Converts geographic coordinates into a human-readable address.
+    -   Input: `{ "lat": number, "lng": number }`
+    -   Example: Reverse geocode latitude 40.7128, longitude -74.0060
+-   **`get_directions`**: Provides step-by-step directions between two locations.
+    -   Input: `{ "origin": "string", "destination": "string", "mode"?: "driving" | "walking" | "bicycling" | "transit" }` (mode defaults to driving)
+    -   Example: Get directions from "San Francisco, CA" to "Los Angeles, CA"
+-   **`get_distance_matrix`**: Calculates travel time and distance for multiple origins and destinations.
+    -   Input: `{ "origins": ["string"], "destinations": ["string"], "mode"?: "driving" | "walking" | "bicycling" | "transit" }` (mode defaults to driving)
+    -   Example: Get distance matrix for origins ["New York, NY", "Washington, DC"] and destinations ["Boston, MA", "Philadelphia, PA"]
 
-Install dependencies:
-```bash
-npm install
-```
+## Setup
 
-Build the server:
-```bash
-npm run build
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/paulelliotco/google-mcp-servers.git
+    cd google-mcp-servers/google-maps-mcp
+    ```
 
-For development with auto-rebuild:
-```bash
-npm run watch
-```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-## Installation
+3.  **Create `.env` file:**
+    Create a file named `.env` in the `google-maps-mcp` directory.
 
-To use with Claude Desktop, add the server config:
+4.  **Add API Key:**
+    Add your Google Maps API key to the `.env` file:
+    ```dotenv
+    GOOGLE_MAPS_API_KEY=YOUR_API_KEY_HERE
+    ```
+    *Note: Ensure you have enabled the necessary APIs (Geocoding, Directions, Distance Matrix, Places) in your Google Cloud project.*
 
-On MacOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
+5.  **Build the server:**
+    ```bash
+    npm run build
+    ```
+
+## Installation (for MCP Clients like Roo/Cursor)
+
+Configure your MCP client to use this server. Add an entry to your `mcp_settings.json` (location varies by client):
 
 ```json
 {
   "mcpServers": {
-    "google-maps-server": {
-      "command": "/path/to/google-maps-server/build/index.js"
+    "google-maps": {
+      "command": "node",
+      "args": ["/path/to/google-mcp-servers/google-maps-mcp/build/index.js"],
+      "env": {}, // Key is loaded via .env by the server itself
+      "disabled": false,
+      "alwaysAllow": [] // Add tool names here if you want to skip confirmation
     }
   }
 }
 ```
+*Replace `/path/to/` with the actual absolute path to the cloned repository.*
 
-### Debugging
+## Development
 
-Since MCP servers communicate over stdio, debugging can be challenging. We recommend using the [MCP Inspector](https://github.com/modelcontextprotocol/inspector), which is available as a package script:
-
-```bash
-npm run inspector
-```
-
-The Inspector will provide a URL to access debugging tools in your browser.
+-   **Build:** `npm run build` (Compiles TypeScript to JavaScript in `build/`)
+-   **Watch:** `npm run watch` (Automatically rebuilds on file changes)
+-   **Lint:** `npm run lint` (Checks code style)
